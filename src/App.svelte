@@ -85,7 +85,7 @@
       // console.log("estimatedTime", estimatedTime);
       // console.log("remaining", remainingTime);
       // console.log("elapsed", elapsed);
-      console.log("durationInSeconds", durationInSeconds);
+      // console.log("durationInSeconds", durationInSeconds);
       turtlebotSpawnProgress = Math.round(100 * (elapsed / durationInSeconds));
       // console.log("math", turtlebotSpawnProgress);
       if (remainingTime === 0 || $rosConnection !== null) {
@@ -123,11 +123,17 @@
       {#if $turtlebotSpawnStatus === "notStarted"}
         <FbButton
           color="green"
-          onclick={() => {
-            spawnTurtlebot();
-            establishConnectionPlaceholder();
+          onclick={async () => {
             $turtlebotSpawnStatus = "inProgress";
             startProgressBarTimer(30);
+
+            try {
+              await spawnTurtlebot(); // Wait for DNS to resolve and domain to be set
+              establishConnectionPlaceholder(); // Now it's safe to attempt connection
+            } catch (e) {
+              console.error("Turtlebot spawn or DNS resolution failed:", e);
+              $turtlebotSpawnStatus = "notStarted";
+            }
           }}>Spawn Robot</FbButton
         >
       {:else if $turtlebotSpawnStatus === "complete"}

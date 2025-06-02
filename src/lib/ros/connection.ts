@@ -32,7 +32,7 @@ export const connectToROS = () => {
   return ros;
 };
 
-export function establishConnectionPlaceholder(interval = 1000) {
+export async function establishConnectionPlaceholder(interval = 1000) {
   const timer = setInterval(() => {
     const host = get(domain);
 
@@ -63,11 +63,28 @@ export function establishConnectionPlaceholder(interval = 1000) {
 export async function spawnTurtlebot() {
   try {
     let uuid = localStorage.getItem("uuid");
+    let uuidTtl = localStorage.getItem("uuidTTL");
+    let activateDelay: boolean = false;
+    const now = new Date();
+
+    if (uuidTtl && new Date(uuidTtl).getTime() < now.getTime()) {
+      uuid = crypto.randomUUID();
+      localStorage.setItem("uuid", uuid);
+
+      const tenMinutesLater = new Date(now.getTime() + 10 * 60000);
+      localStorage.setItem("uuidTTL", tenMinutesLater.toISOString());
+      activateDelay = true;
+    }
+
     if (!uuid) {
       uuid = crypto.randomUUID();
       localStorage.setItem("uuid", uuid);
+
+      const tenMinutesLater = new Date(now.getTime() + 10 * 60000);
+      localStorage.setItem("uuidTTL", tenMinutesLater.toISOString());
+      activateDelay = true;
     }
-    console.log("UuId", uuid);
+
     const res = await fetch(
       "https://rpsqjcbxai.execute-api.us-east-2.amazonaws.com/spawn-turtlebot",
       {
@@ -88,7 +105,14 @@ export async function spawnTurtlebot() {
 
     // // Assuming API returns some useful info like { instanceIp, status }
     // console.log("We tried!!");
+    if (activateDelay) {
+      await delay(30000);
+    }
   } catch (err) {
     console.error("Failed to spawn turtlebot:", err);
   }
+}
+
+async function delay(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms)); // wait 60 seconds
 }
