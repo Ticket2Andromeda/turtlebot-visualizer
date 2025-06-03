@@ -1,4 +1,6 @@
-import ROSLIB from "roslib";
+// import ROSLIB from "roslib";
+import "roslib/build/roslib";
+
 import { get } from "svelte/store";
 import {
   domain,
@@ -13,7 +15,7 @@ export const connectToROS = () => {
   if (!host) {
     throw new Error(`Host at ip ${host} is not defined`);
   }
-  const ros = new ROSLIB.Ros({
+  const ros = new window.ROSLIB.Ros({
     url: host,
   });
 

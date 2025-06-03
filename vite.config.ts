@@ -3,6 +3,15 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  base: "/turtlebot-visualizer/",
   plugins: [tailwindcss(), svelte()],
+  optimizeDeps: {
+    include: ["roslib"],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/, /roslib/],
+      transformMixedEsModules: true,
+      defaultIsModuleExports: "auto",
+    },
+  },
 });

@@ -1,33 +1,12 @@
-import ROSLIB from "roslib";
+// import ROSLIB from "roslib";
 
-export const connectToROS = (host = "ws://localhost:9090") => {
-  if (!host) {
-    throw new Error(`Host at ip ${host} is not defined`);
-  }
-  const ros = new ROSLIB.Ros({
-    url: host,
-  });
-
-  ros.on("connection", () => {
-    console.log(`Connected to ROS. On Host: ${host}`);
-  });
-
-  ros.on("error", (error) => {
-    console.error("Connection error:", error, `connecting to ${host}`);
-  });
-
-  ros.on("close", () => {
-    console.log(`Connection  to ${host} closed.`);
-  });
-
-  return ros;
-};
+import "roslib/build/roslib";
 
 export const subscribeToMap = (
   ros: ROSLIB.Ros,
   callback: (msg: any) => void
 ) => {
-  const mapListener = new ROSLIB.Topic({
+  const mapListener = new window.ROSLIB.Topic({
     ros,
     name: "/map",
     messageType: "nav_msgs/OccupancyGrid",
@@ -40,7 +19,7 @@ export const subscribeToPointCloud = (
   ros: ROSLIB.Ros,
   callback: (msg: any) => void
 ) => {
-  const pointCloudListener = new ROSLIB.Topic({
+  const pointCloudListener = new window.ROSLIB.Topic({
     ros,
     name: "/scan",
     messageType: "sensor_msgs/LaserScan",
@@ -54,7 +33,7 @@ export const subscribeToTF = (
   ros: ROSLIB.Ros,
   callback: (msg: any) => void
 ) => {
-  const tfListener = new ROSLIB.Topic({
+  const tfListener = new window.ROSLIB.Topic({
     ros,
     name: "/tf",
     messageType: "tf2_msgs/TFMessage",
@@ -68,7 +47,7 @@ export const subscribeToBaseLinkTransform = (
   ros: ROSLIB.Ros,
   callback: (transform: ROSLIB.Transform) => void
 ) => {
-  const tfListener = new ROSLIB.Topic({
+  const tfListener = new window.ROSLIB.Topic({
     ros,
     name: "/tf",
     messageType: "tf2_msgs/TFMessage",
@@ -93,7 +72,7 @@ export const subscribeToCameraSensor = (
   ros: ROSLIB.Ros,
   callback: (msg: any) => void
 ) => {
-  const cameraSensorListener = new ROSLIB.Topic({
+  const cameraSensorListener = new window.ROSLIB.Topic({
     ros,
     name: "/camera/rgb/image_raw/compressed", // or raw, if you're decoding manually
     messageType: "sensor_msgs/CompressedImage",
