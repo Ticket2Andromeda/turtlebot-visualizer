@@ -3,6 +3,7 @@ import { get } from "svelte/store";
 import {
   domain,
   rosConnection,
+  sessionTimeRemaining,
   turtlebotSpawnStatus,
 } from "../stores/connectionStore";
 
@@ -32,11 +33,10 @@ export const connectToROS = () => {
   return ros;
 };
 
-export async function establishConnectionPlaceholder(interval = 1000) {
+export async function establishConnection(interval = 5000) {
   const timer = setInterval(() => {
     const host = get(domain);
 
-    console.log("the host should be", host);
     if (host) {
       const ros = connectToROS();
 
@@ -52,6 +52,10 @@ export async function establishConnectionPlaceholder(interval = 1000) {
       });
 
       ros.on("close", () => {
+        const status = get(turtlebotSpawnStatus);
+        if (status === "complete") {
+          turtlebotSpawnStatus.set("terminated");
+        }
         console.log("Connection closed — will retry.");
       });
     } else {
@@ -85,6 +89,12 @@ export async function spawnTurtlebot() {
       activateDelay = true;
     }
 
+    const ttl = localStorage.getItem("uuidTTL");
+    if (ttl) {
+      const timeRemaining = new Date(ttl).getTime() - Date.now();
+      sessionTimeRemaining.set(timeRemaining > 0 ? timeRemaining : 0);
+    }
+
     const res = await fetch(
       "https://rpsqjcbxai.execute-api.us-east-2.amazonaws.com/spawn-turtlebot",
       {
@@ -100,11 +110,7 @@ export async function spawnTurtlebot() {
 
     domain.set(`wss://${uuid}.ticket2andromeda.com/rosbridge/`);
     console.log("retrieved host", get(domain));
-    // const data = await res.json();
-    // console.log("Spawn response:", data);
 
-    // // Assuming API returns some useful info like { instanceIp, status }
-    // console.log("We tried!!");
     if (activateDelay) {
       await delay(30000);
     }

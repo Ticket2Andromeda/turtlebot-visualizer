@@ -1,5 +1,6 @@
 <script lang="ts">
   import { T } from "@threlte/core";
+  import { Instance, InstancedMesh } from "@threlte/extras";
   import { onMount } from "svelte";
   import { Euler, Quaternion } from "three";
   import { subscribeToMap } from "../lib/ros/subscriptions";
@@ -80,21 +81,14 @@
 
 <!-- ✅ Apply map origin and yaw transform here -->
 <T.Group
-  position={[mapOrigin.x, mapOrigin.y, mapOrigin.z]}
+  position={[mapOrigin.x, mapOrigin.y + 0.25, mapOrigin.z]}
   rotation={[0, mapYaw, 0]}
 >
-  {#each cells as cell}
-    <T.Mesh position={[cell.x, cell.y, cell.z]} castShadow>
-      <T.BoxGeometry args={[cellSize, 1, cellSize]} />
-      <T.MeshStandardMaterial color="green" />
-    </T.Mesh>
-  {/each}
-</T.Group>
-<!-- This is for saving performance -->
-<!-- <InstancedMesh>
-    <T.BoxGeometry args={[cellSize, 1, cellSize]} />
+  <InstancedMesh frustumCulled={false} castShadow receiveShadow>
+    <T.BoxGeometry args={[cellSize, 0.75, cellSize]} />
     <T.MeshStandardMaterial color="green" />
     {#each cells as cell}
       <Instance position={[cell.x, cell.y, cell.z]} />
     {/each}
-  </InstancedMesh> -->
+  </InstancedMesh>
+</T.Group>

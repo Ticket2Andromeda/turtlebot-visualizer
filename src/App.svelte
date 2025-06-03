@@ -4,14 +4,11 @@
 
   import { Button as FbButton, Modal, Progressbar } from "flowbite-svelte";
   import { onMount } from "svelte";
-  import { Button, Pane } from "svelte-tweakpane-ui";
+  import { Button, Element, Pane, Separator } from "svelte-tweakpane-ui";
   import CameraSensor from "./components/CameraSensor.svelte";
   import Scene from "./components/Scene.svelte";
   import TeleopController from "./components/TeleopController.svelte";
-  import {
-    establishConnectionPlaceholder,
-    spawnTurtlebot,
-  } from "./lib/ros/connection";
+  import { establishConnection, spawnTurtlebot } from "./lib/ros/connection";
   import { activeCamera } from "./lib/stores/activeCamera";
   import {
     rosConnection,
@@ -82,12 +79,8 @@
 
       remainingTime = Math.max(estimatedTime - elapsed, 0);
       estimatedRemainingTime = Math.floor(remainingTime / 60);
-      // console.log("estimatedTime", estimatedTime);
-      // console.log("remaining", remainingTime);
-      // console.log("elapsed", elapsed);
-      // console.log("durationInSeconds", durationInSeconds);
       turtlebotSpawnProgress = Math.round(100 * (elapsed / durationInSeconds));
-      // console.log("math", turtlebotSpawnProgress);
+
       if (remainingTime === 0 || $rosConnection !== null) {
         turtlebotSpawnProgress = 100;
         clearInterval(timerInterval);
@@ -108,28 +101,19 @@
       {paragraph}
     </p>
   {/each}
-  <!-- <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    To start an instance press "Spawn Turtlebot" below to start the application.
-    This typically takes 3-5 minutes for an instance to spawn and be used with
-    the app.
-  </p>
-  <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-    Turtlebot is a simulated robot using Gazebo simulation. This project demos
-    controlling a robot and visualizing its world creation through its occupancy
-    map using SLAM techniques as it creates lidar
-  </p> -->
+
   {#snippet footer()}
     {#if step === 0}
-      {#if $turtlebotSpawnStatus === "notStarted"}
+      {#if $turtlebotSpawnStatus === "notStarted" || $turtlebotSpawnStatus === "terminated"}
         <FbButton
           color="green"
           onclick={async () => {
             $turtlebotSpawnStatus = "inProgress";
-            startProgressBarTimer(30);
+            startProgressBarTimer(160);
 
             try {
-              await spawnTurtlebot(); // Wait for DNS to resolve and domain to be set
-              establishConnectionPlaceholder(); // Now it's safe to attempt connection
+              await spawnTurtlebot();
+              establishConnection();
             } catch (e) {
               console.error("Turtlebot spawn or DNS resolution failed:", e);
               $turtlebotSpawnStatus = "notStarted";
@@ -193,18 +177,13 @@
       {/if}
     {/if}
   {/snippet}
-  <!-- {#snippet footer()}
-    <FbButton
-      onclick={() => {
-        defaultModalVisible = false;
-        console.log("Default Mode", defaultModalVisible);
-      }}>Spawn Turtlebot</FbButton
-    >
-    <FbButton color="alternative">Decline</FbButton>
-  {/snippet} -->
 </Modal>
 
 <Pane title="Camera Controls" position="fixed">
+  <Element>
+    <div style="color:white;">Estimated Time:</div>
+  </Element>
+  <Separator />
   <Button
     title="Reset"
     on:click={() => {
@@ -232,30 +211,7 @@
     }}
   />
 </Pane>
-<!-- <div class="ui-overlay">
-  <button
-    onclick={() => {
-      activeCamera.set("scene");
-      controls?.reset(true);
-    }}>Reset</button
-  >
-  <button
-    onclick={() => {
-      activeCamera.set("scene");
-      controls?.reset(true);
-    }}>Scene</button
-  >
-  <button
-    onclick={() => {
-      activeCamera.set("robot");
-    }}>Follow</button
-  >
-  <button
-    onclick={() => {
-      activeCamera.set("sensor");
-    }}>Camera Sensor</button
-  >
-</div> -->
+
 {#if $rosConnection !== null}
   <TeleopController />
   <div class="canvas-wrapper">
@@ -271,36 +227,10 @@
   {/if}
 {/if}
 
-<!-- {#if $activeCamera === "sensor"}
-  <CameraSensor />
-{:else}
-  <div class="canvas-wrapper">
-    <Canvas>
-      <Scene bind:controls />
-    </Canvas>
-  </div>
-{/if} -->
-
-<!-- <div class="canvas-wrapper">
-  <Canvas>
-    <Scene bind:controls />
-  </Canvas>
-</div> -->
-
-<!-- Invisible keyboard listener -->
-
 <style>
   :global(body) {
     background-color: #1a1a1a;
   }
-  /* 
-  #app {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-  } */
 
   :global(canvas) {
     display: block;

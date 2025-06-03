@@ -124,7 +124,7 @@
           // Convert ROS coords -> Three.js coords
           robotPosition = [
             mapToBasePos.x, // ROS X → Three.js X
-            mapToBasePos.z, // ROS Z → Three.js Y
+            mapToBasePos.z + 0.05, // ROS Z → Three.js Y
             -mapToBasePos.y, // ROS Y → Three.js Z
           ];
 

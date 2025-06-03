@@ -1,5 +1,6 @@
 <script lang="ts">
   import { T } from "@threlte/core";
+  import { Instance, InstancedMesh } from "@threlte/extras";
   import { onMount } from "svelte";
   import { Quaternion, Vector3 } from "three";
   import {
@@ -307,7 +308,21 @@
   });
 </script>
 
-{#each points as point}
+<InstancedMesh frustumCulled={false}>
+  <T.SphereGeometry args={[0.12, 8, 8]} />
+  <T.MeshStandardMaterial
+    color={0x46affa}
+    transparent
+    opacity={0.3}
+    emissive="blue"
+    emissiveIntensity={3}
+  />
+  {#each points as point}
+    <Instance position={[point.x, point.y, point.z]} />
+  {/each}
+</InstancedMesh>
+
+<!-- {#each points as point}
   <T.Mesh position={[point.x, point.y, point.z]}>
     <T.SphereGeometry args={[0.12, 8, 8]} />
     <T.MeshStandardMaterial
@@ -318,4 +333,24 @@
       emissiveIntensity={3}
     />
   </T.Mesh>
-{/each}
+{/each} -->
+<!-- {#each points as point}
+  <T.Mesh position={[point.x, point.y, point.z]}>
+    <T.SphereGeometry args={[0.12, 8, 8]} />
+    <T.MeshStandardMaterial
+      color={0x46affa}
+      transparent
+      opacity={0.3}
+      emissive="blue"
+      emissiveIntensity={3}
+    />
+  </T.Mesh>
+{/each} -->
+<!-- This is for saving performance -->
+<!-- <InstancedMesh>
+    <T.BoxGeometry args={[cellSize, 1, cellSize]} />
+    <T.MeshStandardMaterial color="green" />
+    {#each cells as cell}
+      <Instance position={[cell.x, cell.y, cell.z]} />
+    {/each}
+  </InstancedMesh> -->

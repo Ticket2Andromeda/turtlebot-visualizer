@@ -5,8 +5,8 @@
   import type CC from "camera-controls";
   import { onMount, tick } from "svelte";
   import { PerspectiveCamera, Vector3 } from "three";
-  // import { EffectComposer } from "threlte-postprocessing";
-  // import { BloomEffect } from "threlte-postprocessing/effects";
+  import { EffectComposer } from "threlte-postprocessing";
+  import { BloomEffect } from "threlte-postprocessing/effects";
   import CameraControls from "../lib/cameraControls";
   import { activeCamera } from "../lib/stores/activeCamera";
   import OccupancyGrid from "./OccupancyGrid.svelte";
@@ -89,14 +89,14 @@
 
   <T.Color attach="background" args={["#1a1a1a"]} />
 
-  <!-- <EffectComposer>
+  <EffectComposer>
     <BloomEffect
       intensity={1}
       luminanceThreshold={0.9}
       luminanceSmoothing={0.025}
       height={480}
     />
-  </EffectComposer> -->
+  </EffectComposer>
 
   <Grid type="polar" color="#c5bfbf" backgroundColor="#c5bfbf" />
   <T.DirectionalLight
