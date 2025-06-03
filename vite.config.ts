@@ -1,5 +1,8 @@
-import tailwindcss from '@tailwindcss/vite';
-import { defineConfig } from 'vite';
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { svelte } from "@sveltejs/vite-plugin-svelte";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
-export default defineConfig({ plugins: [tailwindcss(), svelte()] });
+export default defineConfig({
+  base: "/turtlebot-visualizer/",
+  plugins: [tailwindcss(), svelte()],
+});
