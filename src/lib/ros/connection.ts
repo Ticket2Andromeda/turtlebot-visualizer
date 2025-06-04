@@ -70,10 +70,8 @@ export async function spawnTurtlebot() {
     }
 
     const ttl = localStorage.getItem("uuidTTL");
-    console.log("DEBUG ttl", ttl);
     if (ttl) {
       const timeRemaining = new Date(ttl).getTime() - Date.now();
-      console.log("DEBUG time remaing", timeRemaining);
       remainingSessionTime.set(timeRemaining > 0 ? timeRemaining : 0);
     }
 

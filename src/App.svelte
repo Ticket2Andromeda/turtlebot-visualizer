@@ -104,16 +104,25 @@
   }
 
   function startSessionTimer() {
+    const ttl = localStorage.getItem("uuidTTL");
+    let timeRemaining = 0;
+    if (ttl) {
+      timeRemaining = new Date(ttl).getTime() - Date.now();
+      remainingSessionTime.set(timeRemaining > 0 ? timeRemaining : 0);
+    }
+
     remainingSessionTimeInterval = setInterval(() => {
-      remainingSessionTime.set($remainingSessionTime - 1000);
-      const minutes = Math.floor($remainingSessionTime / 60000);
-      const seconds = Math.floor(($remainingSessionTime / 1000) % 60);
+      timeRemaining -= 1000;
+      timeRemaining = Math.max(timeRemaining, 0);
+      remainingSessionTime.set(timeRemaining);
+      const minutes = Math.floor(timeRemaining / 60000);
+      const seconds = Math.floor((timeRemaining / 1000) % 60);
       if (seconds >= 10) {
         remainingSessionTimeString = `${minutes}:${seconds}`;
       } else {
         remainingSessionTimeString = `${minutes}:0${seconds}`;
       }
-      if ($remainingSessionTime <= 0 || $turtlebotStatus === "terminated") {
+      if (timeRemaining <= 0 || $turtlebotStatus === "terminated") {
         clearInterval(remainingSessionTimeInterval);
       }
     }, 1000);
