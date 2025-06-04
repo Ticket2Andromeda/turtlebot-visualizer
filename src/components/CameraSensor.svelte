@@ -3,8 +3,7 @@
   import { subscribeToCameraSensor } from "../lib/ros/subscriptions";
   import { rosConnection } from "../lib/stores/connectionStore";
   let cameraSensorListener: any;
-  //   let imageElement: HTMLImageElement | null = null;
-  //   export const cameraImageUrl = writable("");
+
   let imageSrc: any;
   let cameraReady = false;
 
@@ -13,13 +12,8 @@
       cameraSensorListener = subscribeToCameraSensor(
         $rosConnection,
         (msg: any) => {
-          console.log("Received camera msg", msg);
           imageSrc = `data:image/jpeg;base64,${msg.data}`;
-          //   if (imageElement) {
-          // imageElement.src = imageSrc;
           cameraReady = true;
-          //   }
-          //   cameraImageUrl.set(imageSrc);
         }
       );
     }
@@ -43,7 +37,7 @@
     width: 100vw;
     height: 100vh;
     object-fit: cover;
-    z-index: 0; /* Above canvas */
+    z-index: 0;
   }
 
   .loading {

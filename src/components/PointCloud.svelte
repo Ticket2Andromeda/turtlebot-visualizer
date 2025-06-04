@@ -3,6 +3,7 @@
   import { Instance, InstancedMesh } from "@threlte/extras";
   import { onMount } from "svelte";
   import { Quaternion, Vector3 } from "three";
+  import { appPalette } from "../lib/colors";
   import {
     subscribeToPointCloud,
     subscribeToTF,
@@ -13,17 +14,6 @@
   let odomToBase: any = null;
   let points: { x: number; y: number; z: number }[] = [];
   let pointCloudListener: any;
-  // This is a manual offset if there's time adjust PC <-> with /initialpose
-  const pointOffset = {
-    x: -2.07,
-    y: -0.45,
-    z: 0,
-  };
-  // const pointOffset = {
-  //   x: -2.07,
-  //   y: -0.45,
-  //   z: 0,
-  // };
 
   let lastUpdate = 0;
   const updateInterval = 1;
@@ -38,21 +28,7 @@
     intensities: number[];
   }
 
-  let transform = {
-    translation: { x: 0, y: 0, z: 0 },
-    rotation: { x: 0, y: 0, z: 0, w: 1 },
-  };
-
   let tfListener: any;
-
-  // function handleTFMessage(msg: any) {
-  //   for (const t of msg.transforms) {
-  //     if (t.header.frame_id === "map" && t.child_frame_id === "base_link") {
-  //       transform = t.transform;
-  //       break;
-  //     }
-  //   }
-  // }
 
   function handleTFMessage(msg: any) {
     for (const t of msg.transforms) {
@@ -135,7 +111,6 @@
           .applyQuaternion(fullQuat)
           .add(mapToBasePos);
 
-        // Convert ROS → Threlte (X, Z, Y)
         newPoints.push({
           x: worldPoint.x,
           y: worldPoint.z,
@@ -143,152 +118,9 @@
         });
       }
 
-      points = newPoints; // <-- THIS LINE WAS MISSING
+      points = newPoints;
     }
   }
-
-  // function updatePointsFromLaserScan(message: LaserScanMessage) {
-  //     const now = Date.now();
-  //     if (now - lastUpdate >= updateInterval) {
-  //       lastUpdate = now;
-
-  //       const { angle_min, angle_increment, range_min, range_max, ranges } =
-  //         message;
-
-  //       const newPoints = [];
-
-  //       // Convert quaternion rotation into Euler (roll, pitch, yaw)
-  //       const q = new Quaternion(
-  //         transform.rotation.x,
-  //         transform.rotation.y,
-  //         transform.rotation.z,
-  //         transform.rotation.w
-  //       );
-  //       const euler = new Euler().setFromQuaternion(q);
-  //       const theta = euler.z; // yaw rotation (not .y — that's pitch!)
-
-  //       for (let i = 0; i < ranges.length; i++) {
-  //         const range = ranges[i];
-  //         if (
-  //           !isFinite(range) ||
-  //           isNaN(range) ||
-  //           range < range_min ||
-  //           range > range_max
-  //         ) {
-  //           continue;
-  //         }
-
-  //         const angle = angle_min + i * angle_increment;
-
-  //         // Local laser frame
-  //         const localX = range * Math.cos(angle);
-  //         const localZ = range * Math.sin(angle);
-  //         const localY = 0;
-
-  //         // Apply yaw rotation
-  //         const rotatedX = localX * Math.cos(theta) - localZ * Math.sin(theta);
-  //         const rotatedZ = localX * Math.sin(theta) + localZ * Math.cos(theta);
-
-  //         // Translate into map frame
-  //         const globalX = rotatedX + transform.translation.x + pointOffset.x;
-  //         const globalZ = rotatedZ + transform.translation.y + pointOffset.y; // ROS Z → Svelte Y
-  //         const globalY = transform.translation.z + pointOffset.z; // ROS Y → Svelte Z
-
-  //         newPoints.push({ x: globalX, y: globalY, z: globalZ });
-  //       }
-
-  //       points = newPoints;
-  //     }
-  //   }
-  // function updatePointsFromLaserScan(message: LaserScanMessage) {
-  //   const now = Date.now();
-  //   if (now - lastUpdate >= updateInterval) {
-  //     lastUpdate = now;
-
-  //     const { angle_min, angle_increment, range_min, range_max, ranges } =
-  //       message;
-
-  //     const newPoints = [];
-
-  //     // Convert quaternion rotation into Euler (roll, pitch, yaw)
-  //     const q = new Quaternion(
-  //       transform.rotation.x,
-  //       transform.rotation.y,
-  //       transform.rotation.z,
-  //       transform.rotation.w
-  //     );
-  //     const euler = new Euler().setFromQuaternion(q);
-  //     const theta = euler.z; // yaw rotation (not .y — that's pitch!)
-
-  //     for (let i = 0; i < ranges.length; i++) {
-  //       const range = ranges[i];
-  //       if (
-  //         !isFinite(range) ||
-  //         isNaN(range) ||
-  //         range < range_min ||
-  //         range > range_max
-  //       ) {
-  //         continue;
-  //       }
-
-  //       const angle = angle_min + i * angle_increment;
-
-  //       // Local laser frame
-  //       const localX = range * Math.cos(angle);
-  //       const localZ = range * Math.sin(angle);
-  //       const localY = 0;
-
-  //       // Apply yaw rotation
-  //       const rotatedX = localX * Math.cos(theta) - localZ * Math.sin(theta);
-  //       const rotatedZ = localX * Math.sin(theta) + localZ * Math.cos(theta);
-
-  //       // Translate into map frame
-  //       const globalX = rotatedX + transform.translation.x + pointOffset.x;
-  //       const globalZ = rotatedZ + transform.translation.y + pointOffset.y; // ROS Z → Svelte Y
-  //       const globalY = transform.translation.z + pointOffset.z; // ROS Y → Svelte Z
-
-  //       newPoints.push({ x: globalX, y: globalY, z: globalZ });
-  //     }
-
-  //     points = newPoints;
-  //   }
-  // }
-
-  // function updatePointsFromLaserScan(message: LaserScanMessage) {
-  //   const now = Date.now();
-  //   console.log("calling update points");
-  //   if (now - lastUpdate >= updateInterval) {
-  //     console.log("inside if statement");
-
-  //     lastUpdate = now;
-  //     const { angle_min, angle_increment, range_min, range_max, ranges } =
-  //       message;
-
-  //     const newPoints = [];
-
-  //     for (let i = 0; i < ranges.length; i++) {
-  //       const range = ranges[i];
-  //       if (
-  //         !isFinite(range) ||
-  //         isNaN(range) ||
-  //         range < range_min ||
-  //         range > range_max
-  //       ) {
-  //         continue;
-  //       }
-
-  //       const angle = angle_min + i * angle_increment;
-  //       const x = range * Math.cos(angle);
-  //       const z = range * Math.sin(angle);
-  //       const y = 0; // Assuming scan is on the ground plane
-
-  //       newPoints.push({ x, y, z });
-  //     }
-
-  //     points = newPoints;
-  //     console.log("Pointcloud updated new points", newPoints);
-  //   }
-  // }
 
   onMount(() => {
     if ($rosConnection) {
@@ -311,46 +143,13 @@
 <InstancedMesh frustumCulled={false}>
   <T.SphereGeometry args={[0.12, 8, 8]} />
   <T.MeshStandardMaterial
-    color={0x46affa}
+    color={appPalette.pointcloud}
     transparent
     opacity={0.3}
-    emissive="blue"
+    emissive={appPalette.pointcloud}
     emissiveIntensity={3}
   />
   {#each points as point}
-    <Instance position={[point.x, point.y, point.z]} />
+    <Instance position={[point.x, point.y + 0.1, point.z]} />
   {/each}
 </InstancedMesh>
-
-<!-- {#each points as point}
-  <T.Mesh position={[point.x, point.y, point.z]}>
-    <T.SphereGeometry args={[0.12, 8, 8]} />
-    <T.MeshStandardMaterial
-      color={0x46affa}
-      transparent
-      opacity={0.3}
-      emissive="blue"
-      emissiveIntensity={3}
-    />
-  </T.Mesh>
-{/each} -->
-<!-- {#each points as point}
-  <T.Mesh position={[point.x, point.y, point.z]}>
-    <T.SphereGeometry args={[0.12, 8, 8]} />
-    <T.MeshStandardMaterial
-      color={0x46affa}
-      transparent
-      opacity={0.3}
-      emissive="blue"
-      emissiveIntensity={3}
-    />
-  </T.Mesh>
-{/each} -->
-<!-- This is for saving performance -->
-<!-- <InstancedMesh>
-    <T.BoxGeometry args={[cellSize, 1, cellSize]} />
-    <T.MeshStandardMaterial color="green" />
-    {#each cells as cell}
-      <Instance position={[cell.x, cell.y, cell.z]} />
-    {/each}
-  </InstancedMesh> -->

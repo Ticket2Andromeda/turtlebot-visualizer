@@ -3,6 +3,7 @@
   import { Instance, InstancedMesh } from "@threlte/extras";
   import { onMount } from "svelte";
   import { Euler, Quaternion } from "three";
+  import { appPalette } from "../lib/colors";
   import { subscribeToMap } from "../lib/ros/subscriptions";
   import { rosConnection } from "../lib/stores/connectionStore";
 
@@ -86,7 +87,7 @@
 >
   <InstancedMesh frustumCulled={false} castShadow receiveShadow>
     <T.BoxGeometry args={[cellSize, 0.75, cellSize]} />
-    <T.MeshStandardMaterial color="green" />
+    <T.MeshStandardMaterial color={appPalette.walls} />
     {#each cells as cell}
       <Instance position={[cell.x, cell.y, cell.z]} />
     {/each}

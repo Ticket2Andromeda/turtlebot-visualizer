@@ -4,43 +4,19 @@ import "roslib/build/roslib";
 import { get } from "svelte/store";
 import {
   domain,
+  remainingSessionTime,
   rosConnection,
-  sessionTimeRemaining,
   turtlebotSpawnStatus,
 } from "../stores/connectionStore";
-
-export const connectToROS = () => {
-  const host = get(domain);
-  console.log("searching for", get(domain));
-  if (!host) {
-    throw new Error(`Host at ip ${host} is not defined`);
-  }
-  const ros = new window.ROSLIB.Ros({
-    url: host,
-  });
-
-  ros.on("connection", () => {
-    console.log(`Connected to ROS. On Host: ${host}`);
-  });
-
-  ros.on("error", (error) => {
-    console.error("Connection error:", error, `connecting to ${host}`);
-  });
-
-  ros.on("close", () => {
-    console.log(`Connection  to ${host} closed.`);
-  });
-
-  console.log("ros1", ros);
-  return ros;
-};
 
 export async function establishConnection(interval = 5000) {
   const timer = setInterval(() => {
     const host = get(domain);
 
     if (host) {
-      const ros = connectToROS();
+      const ros = new window.ROSLIB.Ros({
+        url: host,
+      });
 
       ros.on("connection", () => {
         console.log("✅ Connected to ROS!");
@@ -50,11 +26,13 @@ export async function establishConnection(interval = 5000) {
       });
 
       ros.on("error", (err) => {
+        rosConnection.set(null);
         console.warn("❌ Failed attempt to connect:", err.message);
       });
 
       ros.on("close", () => {
         const status = get(turtlebotSpawnStatus);
+        rosConnection.set(null);
         if (status === "complete") {
           turtlebotSpawnStatus.set("terminated");
         }
@@ -92,9 +70,11 @@ export async function spawnTurtlebot() {
     }
 
     const ttl = localStorage.getItem("uuidTTL");
+    console.log("DEBUG ttl", ttl);
     if (ttl) {
       const timeRemaining = new Date(ttl).getTime() - Date.now();
-      sessionTimeRemaining.set(timeRemaining > 0 ? timeRemaining : 0);
+      console.log("DEBUG time remaing", timeRemaining);
+      remainingSessionTime.set(timeRemaining > 0 ? timeRemaining : 0);
     }
 
     const res = await fetch(
@@ -114,7 +94,7 @@ export async function spawnTurtlebot() {
     console.log("retrieved host", get(domain));
 
     if (activateDelay) {
-      await delay(30000);
+      await delay(60000);
     }
   } catch (err) {
     console.error("Failed to spawn turtlebot:", err);

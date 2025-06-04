@@ -28,6 +28,24 @@
   --color-secondary-900: #0c4a6e;
 }
 
+:root {
+  --color-background-dark-grey: #2C3E50;
+  --color-robot-wheels-dark-grey: #5D6D7E;
+  --color-robot-body-light-grey: #EAECEE;
+
+  --color-walls-green: #638A6E;
+  --color-point-cloud-blue: #5DADE2;
+  --color-heading-indicator-blue: #5DADE2; 
+
+  /* --color-text-primary: var(--color-robot-body-light-grey); */
+  /* --color-text-secondary: var(--color-robot-wheels-dark-grey); */
+}
+/* "#007BFF */
+/* #1a1a1a; */
+body {
+   background-color: #13161F
+}
+
 @source "../node_modules/flowbite-svelte/dist";
 @source "../node_modules/flowbite-svelte-icons/dist";
 

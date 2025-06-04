@@ -11,48 +11,57 @@
   import { establishConnection, spawnTurtlebot } from "./lib/ros/connection";
   import { activeCamera } from "./lib/stores/activeCamera";
   import {
+    remainingSessionTime,
     rosConnection,
-    turtlebotSpawnStatus,
+    turtlebotSpawnStatus as turtlebotStatus,
   } from "./lib/stores/connectionStore";
 
-  let defaultModalVisible = $state(false);
   let controls = $state<CC>();
   let enabled = $state(true);
-  let turtlebotSpawnProgress = $state(0);
 
-  // let robotConnected
+  let turtlebotSpawnProgress = $state(0);
   let estimatedTime = $state(600);
   let estimatedRemainingTime = $state(0);
   let currentTime: number;
   let remainingTime: number;
   let timerInterval: any;
 
-  let step = $state(0);
+  let remainingSessionTimeString = $state<string>("10:00");
+  let remainingSessionTimeInterval: any;
 
-  const steps = [
+  let isModalVisible = $state(false);
+  let modalStep = $state(1);
+
+  const modalSteps = [
+    {
+      title: `Session Ended`,
+      content: [
+        `Thank you for exploring this ROS turtlebot demonstration!`,
+        `To run another simulation or return to the start page, click 'Return' below.`,
+      ],
+    },
     {
       title: "Get started",
       content: [
-        `To start an instance press "Spawn Turtlebot" below to start the application.
-    This typically takes 3-5 minutes for an instance to spawn and be used with
-    the app.`,
-        `Turtlebot is a simulated robot using Gazebo simulation. This project demos
-    controlling a robot and visualizing its world creation through its occupancy
-    map using SLAM techniques as it creates lidar`,
+        `This application demonstrates real-time robotic mapping and visualization using SLAM techniques as the robot explores the world.`,
+        `To begin, click 'Spawn Turtlebot'. This will launch a simulated Turtlebot instance in Gazebo which will take up to 2 minutes to fully initialize and to begin publishing data.`,
+        `Once spawned, you can control the robot and watch as it builds its world through an occupancy map.`,
       ],
     },
     {
       title: "About Project",
       content: [
-        "This project visualizes occupancy maps using SLAM...",
-        "It integrates ROS, WebSockets, and 3D rendering via Threlte...",
+        `This application showcases the integration of “Robot Operating System” (ROS) for robot control and internal data relay, WebSockets for peer-to-peer communication enabling real-time teleoperation of the turtlebot, and finally 3D rendering utilizing Threlte.js, Three.js and Svelte.`,
+        `Explore a real-time visualization of “Simultaneous Localization and Mapping” (SLAM), a technique robots use to build an occupancy grid of its environment.`,
+        `SLAM works by using lidar data that is processed as a “point cloud”, which is then used by the robot to dynamically construct the world around it, as well as the robot’s position in it. `,
+        `In this visualization you’ll notice green structures which represent the dynamically generated occupancy map. As the robot moves you’ll see the blue point-clouds representing lidar scans, helping the robot discern between obstacles and free space.`,
       ],
     },
     {
       title: "Controls",
       content: [
-        "Use WASD keys or on-screen buttons to move the robot...",
-        "You can view the lidar scan in the occupancy grid...",
+        `Control the robot using WASD or arrow keys on your keyboard for directional movement.`,
+        `Adjust your perspective using the 'Camera Controls' panel in the top right to explore the scene. <strong>Scene</strong> will show the full map. <strong>Follow</strong> to view the robot in a third person angle. <strong>Camera</strong> to view from the turtlebot’s camera sensor`,
       ],
     },
   ];
@@ -63,13 +72,19 @@
       console.log("controls enabled");
     }
   });
+  $effect(() => {
+    if ($turtlebotStatus === "terminated") {
+      modalStep = 0;
+      isModalVisible = true;
+    }
+  });
+
   onMount(() => {
-    defaultModalVisible = true;
+    isModalVisible = true;
   });
 
   function startProgressBarTimer(durationInSeconds: number) {
     estimatedTime = durationInSeconds;
-    // remainingTime.set(durationInSeconds);
     currentTime = Date.now();
 
     if (timerInterval) clearInterval(timerInterval);
@@ -87,28 +102,52 @@
       }
     }, 1000);
   }
+
+  function startSessionTimer() {
+    remainingSessionTimeInterval = setInterval(() => {
+      remainingSessionTime.set($remainingSessionTime - 1000);
+      const minutes = Math.floor($remainingSessionTime / 60000);
+      const seconds = Math.floor(($remainingSessionTime / 1000) % 60);
+      if (seconds >= 10) {
+        remainingSessionTimeString = `${minutes}:${seconds}`;
+      } else {
+        remainingSessionTimeString = `${minutes}:0${seconds}`;
+      }
+      if ($remainingSessionTime <= 0 || $turtlebotStatus === "terminated") {
+        clearInterval(remainingSessionTimeInterval);
+      }
+    }, 1000);
+  }
 </script>
 
 <Modal
-  title={steps[step].title}
-  bind:open={defaultModalVisible}
+  title={modalSteps[modalStep].title}
+  bind:open={isModalVisible}
   outsideclose={false}
   dismissable={false}
   size="lg"
 >
-  {#each steps[step].content as paragraph}
+  {#each modalSteps[modalStep].content as paragraph}
     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-      {paragraph}
+      {@html paragraph}
     </p>
   {/each}
 
   {#snippet footer()}
-    {#if step === 0}
-      {#if $turtlebotSpawnStatus === "notStarted" || $turtlebotSpawnStatus === "terminated"}
+    {#if modalStep === 0}
+      <FbButton
+        color="blue"
+        onclick={() => {
+          modalStep++;
+          $turtlebotStatus = "notStarted";
+        }}>Return</FbButton
+      >
+    {:else if modalStep === 1}
+      {#if $turtlebotStatus === "notStarted"}
         <FbButton
           color="green"
           onclick={async () => {
-            $turtlebotSpawnStatus = "inProgress";
+            $turtlebotStatus = "inProgress";
             startProgressBarTimer(160);
 
             try {
@@ -116,60 +155,62 @@
               establishConnection();
             } catch (e) {
               console.error("Turtlebot spawn or DNS resolution failed:", e);
-              $turtlebotSpawnStatus = "notStarted";
+              $turtlebotStatus = "notStarted";
             }
-          }}>Spawn Robot</FbButton
+          }}>Spawn Turtlebot</FbButton
         >
-      {:else if $turtlebotSpawnStatus === "complete"}
+      {:else if $turtlebotStatus === "complete"}
         <FbButton
           color="green"
-          disabled={$turtlebotSpawnStatus !== "complete"}
+          disabled={$turtlebotStatus !== "complete"}
           onclick={() => {
-            defaultModalVisible = false;
+            isModalVisible = false;
+            startSessionTimer();
+            turtlebotSpawnProgress = 0;
           }}>Start!</FbButton
         >
       {/if}
-      <FbButton color="blue" onclick={() => step++}>Next</FbButton>
-      {#if $turtlebotSpawnStatus !== "notStarted"}
+      <FbButton color="blue" onclick={() => modalStep++}>Next</FbButton>
+      {#if $turtlebotStatus !== "notStarted"}
         <div class="w-full max-w-full block">
           <Progressbar
             progress={turtlebotSpawnProgress}
-            color={$turtlebotSpawnStatus === "complete" ? "green" : "blue"}
-            labelOutside={$turtlebotSpawnStatus === "complete"
+            color={$turtlebotStatus === "complete" ? "green" : "blue"}
+            labelOutside={$turtlebotStatus === "complete"
               ? "Robot is ready!"
-              : `Estimated time ${estimatedRemainingTime} minutes`}
+              : `Estimated time ${estimatedRemainingTime} minute(s)`}
           ></Progressbar>
         </div>
       {/if}
-    {:else if step === 1}
-      <FbButton color="gray" onclick={() => step--}>Back</FbButton>
-      <FbButton color="blue" onclick={() => step++}>Next</FbButton>
+    {:else if modalStep === 2}
+      <FbButton color="gray" onclick={() => modalStep--}>Back</FbButton>
+      <FbButton color="blue" onclick={() => modalStep++}>Next</FbButton>
       <div class="w-full max-w-full block">
-        {#if $turtlebotSpawnStatus !== "notStarted"}
+        {#if $turtlebotStatus !== "notStarted"}
           <Progressbar
             progress={turtlebotSpawnProgress}
-            color={$turtlebotSpawnStatus === "complete" ? "green" : "blue"}
-            labelOutside={$turtlebotSpawnStatus === "complete"
+            color={$turtlebotStatus === "complete" ? "green" : "blue"}
+            labelOutside={$turtlebotStatus === "complete"
               ? "Robot is ready!"
               : `Estimated time ${estimatedRemainingTime} minutes`}
           ></Progressbar>
         {/if}
       </div>
     {:else}
-      <FbButton color="gray" onclick={() => step--}>Back</FbButton>
+      <FbButton color="gray" onclick={() => modalStep--}>Back</FbButton>
       <FbButton
         color="green"
-        disabled={$turtlebotSpawnStatus !== "complete"}
+        disabled={$turtlebotStatus !== "complete"}
         onclick={() => {
-          defaultModalVisible = false;
+          isModalVisible = false;
         }}>Start!</FbButton
       >
-      {#if $turtlebotSpawnStatus !== "notStarted"}
+      {#if $turtlebotStatus !== "notStarted"}
         <div class="w-full max-w-full block">
           <Progressbar
             progress={turtlebotSpawnProgress}
-            color={$turtlebotSpawnStatus === "complete" ? "green" : "blue"}
-            labelOutside={$turtlebotSpawnStatus === "complete"
+            color={$turtlebotStatus === "complete" ? "green" : "blue"}
+            labelOutside={$turtlebotStatus === "complete"
               ? "Robot is ready!"
               : `Estimated time ${estimatedRemainingTime} minutes`}
           ></Progressbar>
@@ -181,7 +222,7 @@
 
 <Pane title="Camera Controls" position="fixed">
   <Element>
-    <div style="color:white;">Estimated Time:</div>
+    <div style="color:white;">Estimated Time: {remainingSessionTimeString}</div>
   </Element>
   <Separator />
   <Button
@@ -228,10 +269,6 @@
 {/if}
 
 <style>
-  :global(body) {
-    background-color: #1a1a1a;
-  }
-
   :global(canvas) {
     display: block;
   }

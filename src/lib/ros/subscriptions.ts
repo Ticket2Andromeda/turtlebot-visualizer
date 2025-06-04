@@ -1,5 +1,4 @@
 // import ROSLIB from "roslib";
-
 import "roslib/build/roslib";
 
 export const subscribeToMap = (

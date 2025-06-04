@@ -2,14 +2,9 @@
   import { T } from "@threlte/core";
   import { onMount } from "svelte";
   import { Euler, Quaternion, Vector3 } from "three";
+  import { appPalette } from "../lib/colors";
   import { subscribeToTF } from "../lib/ros/subscriptions";
   import { rosConnection } from "../lib/stores/connectionStore";
-
-  //   let {
-  //     controls = $bindable(),
-  //   }: {
-  //     controls: CC | undefined;
-  //   } = $props();
 
   let {
     robotPosition = $bindable(),
@@ -27,11 +22,6 @@
 
   let rightWheelPosition = $state<[number, number, number]>([0, 0, 0]);
   let rightWheelRotation = $state<[number, number, number]>([0, 0, 0]);
-  //   let leftWheelPosition: [number, number, number] = [0, 0, 0];
-  //   let leftWheelRotation: [number, number, number] = [0, 0, 0];
-
-  //   let rightWheelPosition: [number, number, number] = [0, 0, 0];
-  //   let rightWheelRotation: [number, number, number] = [0, 0, 0];
 
   function convertTransformToPose(transform: any): {
     position: [number, number, number];
@@ -144,24 +134,24 @@
   <T.Mesh position={[0.2, 0.13, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
     <T.CircleGeometry args={[0.1, 0, 0, Math.PI * 2]} />
     <T.MeshStandardMaterial
-      color="blue"
+      color={appPalette.headingIndicator}
       transparent={true}
       opacity={0.5}
       side={2}
-      emissive="blue"
+      emissive={appPalette.headingIndicator}
       emissiveIntensity={28}
     />
   </T.Mesh>
   <!-- Robot body -->
   <T.Mesh position={[0, 0.13, 0]} castShadow receiveShadow>
     <T.CylinderGeometry args={[0.13, 0.13, 0.2, 32]} />
-    <T.MeshStandardMaterial color="#aaaaaa" />
+    <T.MeshStandardMaterial color={appPalette.robotBody} />
   </T.Mesh>
 
   <!-- Left wheel -->
   <T.Mesh position={leftWheelPosition} rotation={leftWheelRotation} castShadow>
     <T.CylinderGeometry args={[0.09, 0.09, 0.03, 8]} />
-    <T.MeshStandardMaterial color="#666666" />
+    <T.MeshStandardMaterial color={appPalette.robotWheels} />
   </T.Mesh>
 
   <!-- Right wheel -->
@@ -171,6 +161,6 @@
     castShadow
   >
     <T.CylinderGeometry args={[0.09, 0.09, 0.03, 10]} />
-    <T.MeshStandardMaterial color="#666666" />
+    <T.MeshStandardMaterial color={appPalette.robotWheels} />
   </T.Mesh>
 </T.Group>
